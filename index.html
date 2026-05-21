@@ -2935,13 +2935,12 @@
         try {
           // Send data using EmailJS Browser SDK
           const response = await emailjs.send("service_557n047", "template_16tkzjt", {
-            from_name: n,
+            user_name: n,
+            user_email: em,
             name: n,
-            reply_to: em,
-            from_email: em,
             email: em,
-            message: ms,
-            msg: ms
+            reply_to: em,
+            message: ms
           });
 
           if (response.status === 200) {
