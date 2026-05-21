@@ -1248,6 +1248,64 @@
         color: #ff4a4a;
       }
 
+      /* ── TOAST NOTIFICATIONS ── */
+      .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        pointer-events: none;
+      }
+      .toast {
+        pointer-events: auto;
+        background: var(--surface2);
+        color: var(--text);
+        border: 2px solid var(--border-mid);
+        padding: 14px 20px;
+        font-family: var(--font);
+        font-size: 0.85rem;
+        font-weight: 500;
+        box-shadow: 4px 4px 0px var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transform: translateX(120%);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        opacity: 0;
+        max-width: 350px;
+      }
+      .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      .toast.success {
+        border-color: var(--accent-green);
+        box-shadow: 4px 4px 0px var(--accent-green);
+      }
+      .toast.error {
+        border-color: #ff4a4a;
+        box-shadow: 4px 4px 0px #ff4a4a;
+      }
+      .toast-icon {
+        font-size: 1.1rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .toast-success-icon {
+        color: var(--accent-green);
+      }
+      .toast-error-icon {
+        color: #ff4a4a;
+      }
+      .toast-message {
+        line-height: 1.4;
+      }
+
       /* ════════════════════════════════════════
        FOOTER
     ════════════════════════════════════════ */
@@ -2814,30 +2872,58 @@
           });
       });
 
-      /* ── CONTACT FORM ── */
+      /* ── TOAST NOTIFICATIONS ── */
+      function showToast(message, type = "success") {
+        let container = document.getElementById("toast-container");
+        if (!container) {
+          container = document.createElement("div");
+          container.id = "toast-container";
+          container.className = "toast-container";
+          document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+
+        const iconClass = type === "success" ? "toast-success-icon" : "toast-error-icon";
+        const iconSymbol = type === "success" ? "✓" : "✕";
+
+        toast.innerHTML = `
+          <span class="toast-icon ${iconClass}">${iconSymbol}</span>
+          <span class="toast-message">${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // Force reflow
+        toast.offsetHeight;
+
+        toast.classList.add("show");
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+          toast.addEventListener("transitionend", () => {
+            toast.remove();
+          });
+        }, 4000);
+      }
+
       /* ── CONTACT FORM ── */
       async function submitForm() {
         const n = document.getElementById("fname").value.trim();
         const em = document.getElementById("femail").value.trim();
         const ms = document.getElementById("fmsg").value.trim();
-        const successDiv = document.getElementById("formSuccess");
-        const errorDiv = document.getElementById("formError");
         const btn = document.getElementById("submitBtn");
 
-        // Reset messages
-        successDiv.style.display = "none";
-        errorDiv.style.display = "none";
-
         if (!n || !em || !ms) {
-          alert("Please fill in all fields.");
+          showToast("Please fill in all fields.", "error");
           return;
         }
 
         // Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(em)) {
-          errorDiv.textContent = "Invalid email address.";
-          errorDiv.style.display = "block";
+          showToast("Invalid email address format.", "error");
           return;
         }
 
@@ -2859,19 +2945,15 @@
           });
 
           if (response.status === 200) {
-            successDiv.style.display = "block";
+            showToast("Message sent! I'll get back to you soon.", "success");
             document.getElementById("fname").value = "";
             document.getElementById("femail").value = "";
             document.getElementById("fmsg").value = "";
-            setTimeout(() => (successDiv.style.display = "none"), 4000);
           } else {
-            errorDiv.textContent = "Server error. Please try again later.";
-            errorDiv.style.display = "block";
+            showToast("Server error. Please try again later.", "error");
           }
         } catch (error) {
-          errorDiv.textContent =
-            "Failed to send. Please try again later.";
-          errorDiv.style.display = "block";
+          showToast("Failed to send. Please try again later.", "error");
         } finally {
           btn.innerHTML = originalBtnHTML;
           btn.disabled = false;
