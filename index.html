@@ -1506,6 +1506,15 @@
         opacity: 0.85;
       }
     </style>
+    <!-- EmailJS Browser SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+      (function() {
+        emailjs.init({
+          publicKey: "18X_7-S7TiT_zL--f",
+        });
+      })();
+    </script>
   </head>
   <body>
     <div class="bg-grid-overlay" aria-hidden="true"></div>
@@ -2838,20 +2847,18 @@
         btn.disabled = true;
 
         try {
-          // Send data to your Vercel Python Serverless Function
-          const response = await fetch("/api/contact", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: n,
-              email: em,
-              message: ms,
-            }),
+          // Send data using EmailJS Browser SDK
+          const response = await emailjs.send("service_557n047", "template_16tkzjt", {
+            from_name: n,
+            name: n,
+            reply_to: em,
+            from_email: em,
+            email: em,
+            message: ms,
+            msg: ms
           });
 
-          if (response.ok) {
+          if (response.status === 200) {
             successDiv.style.display = "block";
             document.getElementById("fname").value = "";
             document.getElementById("femail").value = "";
@@ -2863,7 +2870,7 @@
           }
         } catch (error) {
           errorDiv.textContent =
-            "Failed to connect. Check your internet connection.";
+            "Failed to send. Please try again later.";
           errorDiv.style.display = "block";
         } finally {
           btn.innerHTML = originalBtnHTML;
